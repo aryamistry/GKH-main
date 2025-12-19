@@ -1,698 +1,531 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import {
-  ChefHat,
+import { 
+  ChefHat, 
+  Utensils, 
+  IndianRupee, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle, 
+  Plus, 
   Power,
+  X,
   TrendingUp,
-  Clock,
-  IndianRupee,
-  Plus,
-  Trash2,
-  Eye,
-  EyeOff,
-  CheckCircle,
-  AlertCircle,
-  Download,
-  Settings,
-  UtensilsCrossed,
+  Image as ImageIcon,
+  LogOut,
+  Upload
 } from 'lucide-react';
 
-const HomemakerDashboard = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+// --- Mock Data ---
+const INITIAL_ORDERS = [
+  { id: '101', customerName: 'Rohan Sharma', items: ['Gujarati Thali', 'Extra Chaas'], totalAmount: 180, status: 'pending', time: '12:30 PM', specialNote: 'Less spicy please' },
+  { id: '102', customerName: 'Priya Patel', items: ['Dal Bati', 'Sev Tameta'], totalAmount: 220, status: 'cooking', time: '12:45 PM' },
+  { id: '103', customerName: 'Amit Shah', items: ['Mini Thali'], totalAmount: 120, status: 'ready', time: '01:00 PM' },
+];
 
-  // Strict protection - only verified chefs can access
-  React.useEffect(() => {
-    // If not logged in or wrong role, redirect to home
-    if (!user || user.role !== 'chef') {
-      console.log('HomemakerDashboard: User is not a chef, redirecting to home');
-      navigate('/');
-      return;
-    }
-    
-    // If chef but not verified, redirect to pending verification
-    if (user.role === 'chef' && !user.isVerified) {
-      console.log('HomemakerDashboard: Chef not verified, redirecting to pending verification');
-      navigate('/pending-verification');
-      return;
-    }
-  }, [user, navigate]);
+const INITIAL_MENU = [
+  { id: 'm1', name: 'Gujarati Full Thali', price: 150, isAvailable: true, description: 'Dal, Rice, Roti, Shaak, Sweet', image: null },
+  { id: 'm2', name: 'Kathiyawadi Special', price: 180, isAvailable: true, description: 'Spicy garlic chutney, Bajra Rotla', image: null },
+];
 
-  // ============= STATE MANAGEMENT =============
-  const [kitchenOpen, setKitchenOpen] = useState(true);
+export default function HomemakerDashboard() {
   const [activeTab, setActiveTab] = useState('orders');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [isKitchenOpen, setIsKitchenOpen] = useState(true);
+  const [orders, setOrders] = useState(INITIAL_ORDERS);
+  const [menu, setMenu] = useState(INITIAL_MENU);
+  const [earnings, setEarnings] = useState(1250);
+  const [showToast, setShowToast] = useState(null);
 
-  // Mock menu items
-  const [menuItems, setMenuItems] = useState([
-    { id: 1, name: 'Paneer Butter Masala', price: 280, description: 'Creamy paneer curry', available: true },
-    { id: 2, name: 'Gujarati Thali', price: 320, description: 'Complete Gujarati meal', available: true },
-    { id: 3, name: 'Dal Makhani', price: 220, description: 'Rich lentil curry', available: false },
-    { id: 4, name: 'Biryani', price: 350, description: 'Fragrant basmati rice', available: true },
-  ]);
+  // --- Add Item Modal State ---
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newItem, setNewItem] = useState({ name: '', price: '', description: '', image: null, imagePreview: null });
 
-  // Mock orders with workflow states
-  const [orders, setOrders] = useState([
-    { id: 101, customer: 'Raj Kumar', items: ['Paneer Butter Masala', 'Roti (4)'], amount: 280, status: 'new', time: '10:30 AM' },
-    { id: 102, customer: 'Priya Sharma', items: ['Gujarati Thali'], amount: 320, status: 'new', time: '10:45 AM' },
-    { id: 103, customer: 'Amit Patel', items: ['Dal Makhani', 'Rice'], amount: 320, status: 'cooking', time: '10:15 AM' },
-    { id: 104, customer: 'Sneha Singh', items: ['Biryani (2 boxes)'], amount: 700, status: 'ready', time: '09:45 AM' },
-  ]);
-
-  // Earnings data
-  const todaysEarnings = 2840;
-  const weeklyEarnings = 18500;
-  const totalOrders = orders.length;
-
-  // ============= ORDER MANAGEMENT FUNCTIONS =============
-  const handleAcceptOrder = (orderId) => {
-    setOrders(prev =>
-      prev.map(order =>
-        order.id === orderId ? { ...order, status: 'cooking' } : order
-      )
-    );
-    showSuccessMessage('Order Accepted! Started cooking.');
+  // --- Helpers ---
+  const triggerToast = (message) => {
+    setShowToast(message);
+    setTimeout(() => setShowToast(null), 3000);
   };
 
-  const handleRejectOrder = (orderId) => {
-    setOrders(prev => prev.filter(order => order.id !== orderId));
-    showSuccessMessage('Order Declined.');
+  const handleLogout = () => {
+    // Logic to clear session/token would go here
+    alert("Logging out...");
+    window.location.reload(); 
   };
 
-  const handleMarkReady = (orderId) => {
-    setOrders(prev =>
-      prev.map(order =>
-        order.id === orderId ? { ...order, status: 'ready' } : order
-      )
-    );
-    showSuccessMessage('Order Ready! Customer notified.');
-  };
+  const handleOrderAction = (orderId, action) => {
+    setOrders(prev => prev.map(order => {
+      if (order.id !== orderId) return order;
+      if (action === 'accept') return { ...order, status: 'cooking' };
+      if (action === 'reject') return { ...order, status: 'rejected' };
+      if (action === 'cooked') return { ...order, status: 'ready' };
+      if (action === 'handover') {
+        setEarnings(curr => curr + order.totalAmount);
+        return { ...order, status: 'completed' };
+      }
+      return order;
+    }));
 
-  const handleHandover = (orderId) => {
-    setOrders(prev => prev.filter(order => order.id !== orderId));
-    showSuccessMessage('Order Handed Over. Thank you!');
-  };
-
-  // ============= MENU MANAGEMENT FUNCTIONS =============
-  const toggleMenuItemAvailability = (itemId) => {
-    setMenuItems(prev =>
-      prev.map(item =>
-        item.id === itemId ? { ...item, available: !item.available } : item
-      )
-    );
-    showSuccessMessage('Menu Updated Successfully');
-  };
-
-  const deleteMenuItem = (itemId) => {
-    setMenuItems(prev => prev.filter(item => item.id !== itemId));
-    showSuccessMessage('Item Removed from Menu');
-  };
-
-  const handleAddMenuItem = () => {
-    const newItem = {
-      id: Math.max(...menuItems.map(m => m.id), 0) + 1,
-      name: 'New Dish',
-      price: 300,
-      description: 'Add description',
-      available: true,
+    const messages = {
+      accept: "Order Accepted!",
+      reject: "Order Rejected.",
+      cooked: "Marked as Ready!",
+      handover: "Payment Added!"
     };
-    setMenuItems(prev => [...prev, newItem]);
-    showSuccessMessage('New Item Added! Edit details below.');
+    triggerToast(messages[action]);
   };
 
-  const handleRequestPayout = () => {
-    showSuccessMessage('Payout Request Submitted! You\'ll receive funds within 2-3 business days.');
+  const toggleItemAvailability = (id) => {
+    setMenu(prev => prev.map(item => 
+      item.id === id ? { ...item, isAvailable: !item.isAvailable } : item
+    ));
+    triggerToast("Availability Updated");
   };
 
-  // ============= UI HELPER FUNCTIONS =============
-  const showSuccessMessage = (message) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(''), 3000);
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'new':
-        return 'border-blue-200 bg-blue-50';
-      case 'cooking':
-        return 'border-yellow-200 bg-yellow-50';
-      case 'ready':
-        return 'border-green-200 bg-green-50';
-      default:
-        return 'border-gray-200 bg-gray-50';
+  // --- Image Upload Handler ---
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setNewItem({ ...newItem, image: file, imagePreview: previewUrl });
     }
   };
 
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'new':
-        return 'New Request';
-      case 'cooking':
-        return 'Cooking';
-      case 'ready':
-        return 'Ready for Pickup';
-      default:
-        return status;
+  const handleAddItem = (e) => {
+    e.preventDefault(); 
+    
+    if (!newItem.name || !newItem.price) {
+        triggerToast("Please fill in Name and Price");
+        return;
     }
+
+    const itemToAdd = {
+        id: Date.now().toString(),
+        name: newItem.name,
+        price: parseFloat(newItem.price),
+        description: newItem.description || 'Delicious home cooked meal',
+        isAvailable: true,
+        image: newItem.imagePreview // Storing the preview URL for display
+    };
+
+    setMenu(prev => [itemToAdd, ...prev]); 
+    setIsAddModalOpen(false); 
+    setNewItem({ name: '', price: '', description: '', image: null, imagePreview: null }); 
+    triggerToast("New Item Added to Menu!");
   };
 
-  // Get orders by status
-  const newOrders = orders.filter(o => o.status === 'new');
-  const cookingOrders = orders.filter(o => o.status === 'cooking');
-  const readyOrders = orders.filter(o => o.status === 'ready');
+  // --- Sub-Components ---
+  const StatCard = ({ label, value, icon: Icon, colorClass }) => (
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4 transition-transform hover:scale-105">
+      <div className={`p-4 rounded-full ${colorClass} bg-opacity-10`}>
+        <Icon className={`w-8 h-8 ${colorClass.replace('bg-', 'text-')}`} />
+      </div>
+      <div>
+        <p className="text-slate-500 text-sm font-medium uppercase tracking-wide">{label}</p>
+        <p className="text-3xl font-bold text-slate-800">{value}</p>
+      </div>
+    </div>
+  );
 
-  // Redirect loading state
-  if (!user || user.role !== 'chef' || (user.role === 'chef' && !user.isVerified)) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 to-white">
-        <div className="text-center">
-          <div className="animate-spin inline-flex p-3 bg-primary/10 rounded-lg mb-4">
-            <ChefHat className="text-primary animate-spin" size={32} />
+  const OrderCard = ({ order, actionButtons, headerColor, accentColor }) => (
+    <div className={`bg-white border rounded-xl shadow-sm relative overflow-hidden flex flex-col h-full transition-all hover:shadow-md ${isKitchenOpen ? '' : 'opacity-50 pointer-events-none'}`}>
+      <div className={`absolute top-0 left-0 w-1.5 h-full ${accentColor}`}></div>
+      <div className="p-5 flex flex-col h-full">
+        <div className="flex justify-between items-start mb-3">
+          <div>
+            <h4 className="font-bold text-lg text-slate-800">{order.customerName}</h4>
+            <div className="flex items-center text-slate-500 text-xs mt-1">
+              <Clock className="w-3 h-3 mr-1" />
+              {order.time}
+            </div>
           </div>
-          <p className="text-slate-600 font-semibold">Redirecting you...</p>
+          <span className={`px-3 py-1 rounded-full text-sm font-bold ${headerColor}`}>
+            ₹{order.totalAmount}
+          </span>
+        </div>
+        
+        <div className="bg-slate-50 p-3 rounded-lg mb-4 flex-grow border border-slate-100">
+          <p className="text-slate-700 text-sm font-medium leading-relaxed">{order.items.join(', ')}</p>
+          {order.specialNote && (
+            <div className="mt-2 text-xs text-red-600 bg-red-50 p-1.5 rounded border border-red-100 flex items-start">
+              <AlertCircle className="w-3 h-3 mr-1 mt-0.5 flex-shrink-0" />
+              Note: {order.specialNote}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-auto">
+          {actionButtons(order)}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
-      {/* ============= HEADER SECTION ============= */}
-      <header className="bg-white shadow-sm sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            {/* Greeting */}
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <ChefHat className="text-primary" size={28} />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-                  Namaste, {user.name || 'Chef'}! 🙏
-                </h1>
-                <p className="text-sm text-slate-600">Welcome to your kitchen management hub</p>
-              </div>
-            </div>
+  // --- Views ---
+  const OrdersView = () => {
+    const newOrders = orders.filter(o => o.status === 'pending');
+    const cookingOrders = orders.filter(o => o.status === 'cooking');
+    const readyOrders = orders.filter(o => o.status === 'ready');
 
-            {/* Kitchen Status Toggle */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setKitchenOpen(!kitchenOpen);
-                showSuccessMessage(kitchenOpen ? 'Kitchen Closed' : 'Kitchen Open');
-              }}
-              className={`px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all ${
-                kitchenOpen
-                  ? 'bg-green-500 text-white shadow-lg'
-                  : 'bg-slate-300 text-slate-700 shadow-md'
-              }`}
-            >
-              <Power size={20} />
-              <span>{kitchenOpen ? 'Kitchen Open' : 'Kitchen Closed'}</span>
-            </motion.button>
-          </div>
-
-          {/* Quick Stats Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 pt-4 border-t border-slate-200">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
-              <p className="text-xs text-slate-600 font-semibold">Today's Orders</p>
-              <p className="text-3xl font-bold text-blue-600 mt-1">{totalOrders}</p>
+    return (
+      <div className="space-y-8 pb-24">
+        {/* Kitchen Status */}
+        <div className={`p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between shadow-sm border transition-colors ${isKitchenOpen ? 'bg-green-50 border-green-200' : 'bg-slate-100 border-slate-300'}`}>
+          <div className="flex items-center mb-4 md:mb-0">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${isKitchenOpen ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-500'}`}>
+              <Power className="w-6 h-6" />
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
-              <p className="text-xs text-slate-600 font-semibold">Today's Earnings</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">₹{todaysEarnings}</p>
-            </div>
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
-              <p className="text-xs text-slate-600 font-semibold">Weekly Earnings</p>
-              <p className="text-3xl font-bold text-purple-600 mt-1">₹{weeklyEarnings}</p>
-            </div>
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
-              <p className="text-xs text-slate-600 font-semibold">Kitchen Status</p>
-              <p className={`text-lg font-bold mt-1 ${kitchenOpen ? 'text-green-600' : 'text-slate-600'}`}>
-                {kitchenOpen ? '🟢 Open' : '🔴 Closed'}
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">
+                {isKitchenOpen ? 'Kitchen is OPEN' : 'Kitchen is CLOSED'}
+              </h2>
+              <p className="text-slate-600">
+                {isKitchenOpen ? 'You are visible to customers.' : 'Go online to receive orders.'}
               </p>
             </div>
           </div>
+          <button 
+            onClick={() => setIsKitchenOpen(!isKitchenOpen)}
+            className={`w-full md:w-auto px-8 py-3 rounded-xl font-bold text-lg shadow-md transition-all active:scale-95 ${isKitchenOpen ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-slate-800 text-white hover:bg-slate-900'}`}
+          >
+            {isKitchenOpen ? 'Go Offline' : 'Go Online'}
+          </button>
         </div>
-      </header>
-
-      {/* ============= SUCCESS MESSAGE TOAST ============= */}
-      {successMessage && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2"
-        >
-          <CheckCircle size={20} />
-          {successMessage}
-        </motion.div>
-      )}
-
-      {/* ============= MAIN CONTENT ============= */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 mb-8 bg-white rounded-lg p-2 shadow-sm">
-          {[
-            { id: 'orders', label: 'Active Orders', icon: UtensilsCrossed },
-            { id: 'menu', label: 'My Menu', icon: ChefHat },
-            { id: 'earnings', label: 'Earnings', icon: IndianRupee },
-            { id: 'profile', label: 'Profile', icon: Settings },
-          ].map(tab => {
-            const IconComponent = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-primary text-white shadow-md'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                <IconComponent size={18} />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
-              </button>
-            );
-          })}
+        
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="Today's Orders" value={orders.filter(o => o.status !== 'rejected').length} icon={ChefHat} colorClass="bg-orange-500" />
+          <StatCard label="Pending" value={newOrders.length} icon={AlertCircle} colorClass="bg-blue-500" />
+          <StatCard label="Completed" value={orders.filter(o => o.status === 'completed').length} icon={CheckCircle} colorClass="bg-purple-500" />
+          <StatCard label="Earnings" value={`₹${earnings}`} icon={IndianRupee} colorClass="bg-green-600" />
         </div>
 
-        {/* ============= ORDERS TAB ============= */}
-        {activeTab === 'orders' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            {!kitchenOpen && (
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded flex items-start gap-3">
-                <AlertCircle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
-                <div>
-                  <p className="font-semibold text-yellow-800">Kitchen is Currently Closed</p>
-                  <p className="text-sm text-yellow-700">Turn on the toggle above to accept new orders.</p>
-                </div>
-              </div>
-            )}
-
-            {/* NEW REQUESTS SECTION */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="bg-blue-50 px-6 py-4 border-b border-blue-200">
-                <h2 className="text-lg font-bold text-blue-900 flex items-center gap-2">
-                  <AlertCircle size={20} />
-                  New Requests ({newOrders.length})
-                </h2>
-                <p className="text-sm text-blue-700 mt-1">Accept or decline new orders</p>
-              </div>
-              <div className="p-6">
-                {newOrders.length === 0 ? (
-                  <p className="text-center text-slate-500 py-8">No new orders at the moment</p>
-                ) : (
-                  <div className="space-y-4">
-                    {newOrders.map(order => (
-                      <motion.div
-                        key={order.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="border border-blue-200 rounded-lg p-4 bg-blue-50"
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <p className="text-xs text-slate-600 font-semibold">CUSTOMER</p>
-                            <p className="text-lg font-bold text-slate-900 mt-1">{order.customer}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-600 font-semibold">ITEMS</p>
-                            <p className="text-sm text-slate-700 mt-1">
-                              {order.items.join(', ')}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-600 font-semibold">AMOUNT & TIME</p>
-                            <p className="text-lg font-bold text-green-600 mt-1">₹{order.amount}</p>
-                            <p className="text-xs text-slate-600">{order.time}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-3 mt-4">
-                          <button
-                            onClick={() => handleAcceptOrder(order.id)}
-                            disabled={!kitchenOpen}
-                            className="flex-1 py-2 px-4 rounded-lg font-semibold bg-green-500 text-white hover:bg-green-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
-                          >
-                            ✓ Accept & Start Cooking
-                          </button>
-                          <button
-                            onClick={() => handleRejectOrder(order.id)}
-                            className="flex-1 py-2 px-4 rounded-lg font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
-                          >
-                            ✕ Decline
-                          </button>
-                        </div>
-                      </motion.div>
-                    ))}
+        {/* KANBAN BOARD */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold flex items-center text-slate-800 border-b pb-2">
+              <span className="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
+              New Requests ({newOrders.length})
+            </h3>
+            {newOrders.map(order => (
+              <OrderCard 
+                key={order.id} 
+                order={order}
+                headerColor="bg-orange-100 text-orange-800"
+                accentColor="bg-orange-500"
+                actionButtons={(o) => (
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => handleOrderAction(o.id, 'reject')} className="py-2.5 rounded-lg border border-red-200 text-red-600 font-bold hover:bg-red-50 text-sm">Reject</button>
+                    <button onClick={() => handleOrderAction(o.id, 'accept')} className="py-2.5 rounded-lg bg-green-600 text-white font-bold shadow-md hover:bg-green-700 text-sm">Accept</button>
                   </div>
                 )}
-              </div>
-            </div>
+              />
+            ))}
+          </div>
 
-            {/* COOKING SECTION */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="bg-yellow-50 px-6 py-4 border-b border-yellow-200">
-                <h2 className="text-lg font-bold text-yellow-900 flex items-center gap-2">
-                  <Clock size={20} />
-                  Cooking/Preparing ({cookingOrders.length})
-                </h2>
-                <p className="text-sm text-yellow-700 mt-1">Mark as ready when done</p>
-              </div>
-              <div className="p-6">
-                {cookingOrders.length === 0 ? (
-                  <p className="text-center text-slate-500 py-8">No orders being prepared</p>
-                ) : (
-                  <div className="space-y-4">
-                    {cookingOrders.map(order => (
-                      <motion.div
-                        key={order.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="border border-yellow-200 rounded-lg p-4 bg-yellow-50"
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <p className="text-xs text-slate-600 font-semibold">CUSTOMER</p>
-                            <p className="text-lg font-bold text-slate-900 mt-1">{order.customer}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-600 font-semibold">ITEMS</p>
-                            <p className="text-sm text-slate-700 mt-1">
-                              {order.items.join(', ')}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-600 font-semibold">AMOUNT & TIME</p>
-                            <p className="text-lg font-bold text-green-600 mt-1">₹{order.amount}</p>
-                            <p className="text-xs text-slate-600">{order.time}</p>
-                          </div>
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold flex items-center text-slate-800 border-b pb-2">
+              <span className="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+              Preparing ({cookingOrders.length})
+            </h3>
+            {cookingOrders.map(order => (
+              <OrderCard 
+                key={order.id} 
+                order={order}
+                headerColor="bg-blue-100 text-blue-800"
+                accentColor="bg-blue-500"
+                actionButtons={(o) => (
+                  <button onClick={() => handleOrderAction(o.id, 'cooked')} className="w-full py-3 rounded-lg bg-blue-600 text-white font-bold shadow hover:bg-blue-700 flex justify-center items-center">
+                    <Utensils className="w-4 h-4 mr-2" /> Mark Ready
+                  </button>
+                )}
+              />
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold flex items-center text-slate-800 border-b pb-2">
+              <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+              Ready for Pickup ({readyOrders.length})
+            </h3>
+            {readyOrders.map(order => (
+              <OrderCard 
+                key={order.id} 
+                order={order}
+                headerColor="bg-green-100 text-green-800"
+                accentColor="bg-green-500"
+                actionButtons={(o) => (
+                  <button onClick={() => handleOrderAction(o.id, 'handover')} className="w-full py-3 rounded-lg bg-slate-800 text-white font-bold shadow hover:bg-slate-900 flex justify-center items-center">
+                    <CheckCircle className="w-4 h-4 mr-2" /> Handed Over
+                  </button>
+                )}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const MenuView = () => (
+    <div className="space-y-6 pb-24 relative">
+       {/* Modal Overlay */}
+       {isAddModalOpen && (
+         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm animate-in fade-in duration-200">
+           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto">
+             <div className="p-4 border-b flex justify-between items-center bg-slate-50 sticky top-0 z-10">
+               <h3 className="font-bold text-lg text-slate-800">Add New Dish</h3>
+               <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full">
+                 <X className="w-5 h-5 text-slate-500" />
+               </button>
+             </div>
+             <form onSubmit={handleAddItem} className="p-6 space-y-4">
+                
+                {/* Image Upload Section */}
+                <div>
+                   <label className="block text-sm font-medium text-slate-700 mb-2">Food Image</label>
+                   <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:bg-slate-50 transition-colors relative">
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      {newItem.imagePreview ? (
+                        <div className="relative h-40 w-full">
+                           <img src={newItem.imagePreview} alt="Preview" className="w-full h-full object-cover rounded-lg" />
+                           <p className="text-xs text-center mt-2 text-green-600 font-bold">Image Selected</p>
                         </div>
-                        <button
-                          onClick={() => handleMarkReady(order.id)}
-                          className="w-full mt-4 py-2 px-4 rounded-lg font-semibold bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-4 text-slate-400">
+                           <Upload className="w-10 h-10 mb-2" />
+                           <span className="text-sm">Click to upload photo</span>
+                        </div>
+                      )}
+                   </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Dish Name</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="e.g. Aloo Paratha"
+                      className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                      value={newItem.name}
+                      onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Price (₹)</label>
+                    <input 
+                      type="number" 
+                      required
+                      placeholder="e.g. 120"
+                      className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                      value={newItem.price}
+                      onChange={(e) => setNewItem({...newItem, price: e.target.value})}
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                    <textarea 
+                      placeholder="Short description of the food..."
+                      className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none h-24 resize-none"
+                      value={newItem.description}
+                      onChange={(e) => setNewItem({...newItem, description: e.target.value})}
+                    />
+                </div>
+                <div className="pt-2">
+                    <button type="submit" className="w-full bg-orange-600 text-white font-bold py-3 rounded-xl hover:bg-orange-700 shadow-lg active:scale-95 transition-all">
+                        Add to Menu
+                    </button>
+                </div>
+             </form>
+           </div>
+         </div>
+       )}
+
+       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+         <div>
+            <h2 className="text-2xl font-bold text-slate-800">Menu Management</h2>
+            <p className="text-slate-500 text-sm">Toggle the switch to show/hide items.</p>
+         </div>
+         <button 
+           onClick={() => setIsAddModalOpen(true)}
+           className="bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg font-bold flex items-center justify-center hover:bg-orange-700 active:scale-95 transition-all"
+         >
+           <Plus className="w-5 h-5 mr-2" /> Add New Item
+         </button>
+       </div>
+       
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+         {menu.map(item => (
+           <div key={item.id} className={`bg-white p-5 rounded-2xl border shadow-sm transition-all hover:shadow-md ${!item.isAvailable ? 'opacity-75 bg-slate-50' : ''}`}>
+             <div className="flex justify-between items-start mb-4">
+                <div className="w-20 h-20 bg-slate-200 rounded-lg overflow-hidden flex-shrink-0 mr-4 border border-slate-100">
+                    {item.image ? (
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+                            <ImageIcon className="w-6 h-6" />
+                        </div>
+                    )}
+                </div>
+                <div className="flex flex-col items-end">
+                     <span className="font-bold text-lg text-slate-800">₹{item.price}</span>
+                     <div className="mt-2 flex flex-col items-end">
+                        <label className="text-xs font-bold text-slate-400 mb-1">{item.isAvailable ? 'Available' : 'Sold Out'}</label>
+                        <button 
+                            onClick={() => toggleItemAvailability(item.id)}
+                            className={`w-12 h-7 rounded-full transition-colors relative ${item.isAvailable ? 'bg-green-500' : 'bg-slate-300'}`}
                         >
-                          ✓ Mark as Ready for Pickup
+                            <div className={`w-5 h-5 bg-white rounded-full absolute top-1 transition-all shadow-sm ${item.isAvailable ? 'left-6' : 'left-1'}`}></div>
                         </button>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* READY FOR PICKUP SECTION */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="bg-green-50 px-6 py-4 border-b border-green-200">
-                <h2 className="text-lg font-bold text-green-900 flex items-center gap-2">
-                  <CheckCircle size={20} />
-                  Ready for Pickup ({readyOrders.length})
-                </h2>
-                <p className="text-sm text-green-700 mt-1">Mark as handed over</p>
-              </div>
-              <div className="p-6">
-                {readyOrders.length === 0 ? (
-                  <p className="text-center text-slate-500 py-8">No ready orders</p>
-                ) : (
-                  <div className="space-y-4">
-                    {readyOrders.map(order => (
-                      <motion.div
-                        key={order.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="border border-green-200 rounded-lg p-4 bg-green-50"
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <p className="text-xs text-slate-600 font-semibold">CUSTOMER</p>
-                            <p className="text-lg font-bold text-slate-900 mt-1">{order.customer}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-600 font-semibold">ITEMS</p>
-                            <p className="text-sm text-slate-700 mt-1">
-                              {order.items.join(', ')}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-600 font-semibold">AMOUNT & TIME</p>
-                            <p className="text-lg font-bold text-green-600 mt-1">₹{order.amount}</p>
-                            <p className="text-xs text-slate-600">{order.time}</p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleHandover(order.id)}
-                          className="w-full mt-4 py-2 px-4 rounded-lg font-semibold bg-green-500 text-white hover:bg-green-600 transition-colors"
-                        >
-                          ✓ Order Handed Over
-                        </button>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ============= MENU TAB ============= */}
-        {activeTab === 'menu' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-slate-900">My Menu Items</h2>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleAddMenuItem}
-                disabled={!kitchenOpen}
-                className="px-6 py-3 rounded-lg font-semibold bg-primary text-white hover:bg-orange-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-              >
-                <Plus size={20} />
-                Add New Item
-              </motion.button>
-            </div>
-
-            {!kitchenOpen && (
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded flex items-start gap-3">
-                <AlertCircle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
-                <div>
-                  <p className="font-semibold text-yellow-800">Menu Editing Disabled</p>
-                  <p className="text-sm text-yellow-700">Turn on the kitchen status toggle to edit menu items.</p>
-                </div>
-              </div>
-            )}
-
-            <div className="grid gap-4">
-              {menuItems.map(item => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-lg shadow-md p-6 border-l-4 border-primary"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-slate-900">{item.name}</h3>
-                      <p className="text-slate-600 mt-1">{item.description}</p>
-                      <p className="text-2xl font-bold text-green-600 mt-2">₹{item.price}</p>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleMenuItemAvailability(item.id)}
-                        disabled={!kitchenOpen}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
-                          item.available
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                            : 'bg-red-100 text-red-700 hover:bg-red-200'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        {item.available ? (
-                          <>
-                            <Eye size={18} />
-                            Available
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff size={18} />
-                            Unavailable
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => deleteMenuItem(item.id)}
-                        disabled={!kitchenOpen}
-                        className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <Trash2 size={20} />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* ============= EARNINGS TAB ============= */}
-        {activeTab === 'earnings' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            <h2 className="text-2xl font-bold text-slate-900">Your Earnings</h2>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Today's Earnings */}
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 font-semibold">Today's Earnings</p>
-                    <p className="text-5xl font-bold mt-2">₹{todaysEarnings}</p>
-                    <p className="text-blue-100 text-sm mt-2">{totalOrders} orders completed</p>
-                  </div>
-                  <TrendingUp size={48} className="opacity-30" />
                 </div>
-              </div>
-
-              {/* Weekly Earnings */}
-              <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow-lg p-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100 font-semibold">This Week's Earnings</p>
-                    <p className="text-5xl font-bold mt-2">₹{weeklyEarnings}</p>
-                    <p className="text-green-100 text-sm mt-2">7 days of service</p>
-                  </div>
-                  <IndianRupee size={48} className="opacity-30" />
-                </div>
-              </div>
-            </div>
-
-            {/* Earnings Breakdown */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Earning Breakdown</h3>
-              <div className="space-y-3">
-                {[
-                  { label: 'Monday', amount: 2200 },
-                  { label: 'Tuesday', amount: 2800 },
-                  { label: 'Wednesday', amount: 2100 },
-                  { label: 'Thursday', amount: 3200 },
-                  { label: 'Friday', amount: 3600 },
-                  { label: 'Saturday', amount: 2400 },
-                  { label: 'Sunday', amount: 1200 },
-                ].map((day, idx) => (
-                  <div key={idx} className="flex items-center justify-between">
-                    <p className="font-semibold text-slate-700">{day.label}</p>
-                    <div className="flex items-center gap-3">
-                      <div className="h-2 bg-slate-200 rounded-full" style={{ width: `${(day.amount / 3600) * 100}px` }} />
-                      <p className="font-bold text-slate-900 w-20 text-right">₹{day.amount}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Payout Section */}
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg shadow-md p-8 text-center">
-              <p className="text-slate-700 font-semibold">Current Balance Available for Payout</p>
-              <p className="text-5xl font-bold text-purple-600 mt-2">₹{weeklyEarnings}</p>
-              <p className="text-slate-600 text-sm mt-2">Minimum payout: ₹500</p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleRequestPayout}
-                className="mt-6 px-8 py-3 rounded-lg font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors flex items-center gap-2 mx-auto"
-              >
-                <Download size={20} />
-                Request Payout
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ============= PROFILE TAB ============= */}
-        {activeTab === 'profile' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            <h2 className="text-2xl font-bold text-slate-900">Your Profile</h2>
-
-            <div className="bg-white rounded-lg shadow-md p-8 space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Name</label>
-                  <p className="text-lg text-slate-900 p-3 bg-slate-50 rounded-lg">{user.name}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Role</label>
-                  <p className="text-lg text-slate-900 p-3 bg-slate-50 rounded-lg">Homemaker Chef</p>
-                </div>
-              </div>
-
-              {user.chefProfile && (
-                <>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Specialty</label>
-                      <p className="text-lg text-slate-900 p-3 bg-slate-50 rounded-lg">
-                        {user.chefProfile.specialty || 'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Kitchen Location</label>
-                      <p className="text-lg text-slate-900 p-3 bg-slate-50 rounded-lg">
-                        {user.chefProfile.kitchenLocation || 'Not specified'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Contact Details</label>
-                    <p className="text-lg text-slate-900 p-3 bg-slate-50 rounded-lg">
-                      {user.chefProfile.contactDetails || 'Not specified'}
-                    </p>
-                  </div>
-                </>
-              )}
-
-              <div className="pt-6 border-t border-slate-200">
-                <p className="text-sm text-slate-600 mb-4">
-                  <span className="font-semibold">Verification Status:</span>
-                </p>
-                <div className="flex items-center gap-2">
-                  {user.isVerified ? (
-                    <>
-                      <CheckCircle className="text-green-600" size={24} />
-                      <span className="font-semibold text-green-600">Verified Homemaker Chef</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="text-yellow-600" size={24} />
-                      <span className="font-semibold text-yellow-600">Under Verification</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </main>
+             </div>
+             
+             <div>
+                 <h4 className="font-bold text-lg text-slate-800 mb-1">{item.name}</h4>
+                 <p className="text-slate-500 text-sm">{item.description}</p>
+             </div>
+           </div>
+         ))}
+       </div>
     </div>
   );
-};
 
-export default HomemakerDashboard;
+  const EarningsView = () => (
+    <div className="space-y-8 pb-24 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold text-slate-800">Earnings Report</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 text-white shadow-xl flex flex-col justify-between h-64">
+            <div>
+                <p className="text-slate-300 font-medium mb-1">Total Balance</p>
+                <h3 className="text-5xl font-bold">₹{earnings + 4500}</h3> 
+            </div>
+            <button 
+            onClick={() => triggerToast("Payout Request Sent to Admin!")}
+            className="w-full bg-white text-slate-900 font-bold py-3 rounded-lg hover:bg-slate-100 transition-colors"
+            >
+            Request Payout
+            </button>
+        </div>
+
+        <div className="bg-white rounded-2xl border p-6 shadow-sm h-64 overflow-y-auto">
+            <h4 className="font-bold text-slate-800 mb-4 flex items-center">
+                <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
+                Recent History
+            </h4>
+            <div className="space-y-4">
+            {[1,2,3,4,5].map((_, i) => (
+                <div key={i} className="flex justify-between items-center border-b border-slate-50 pb-3 last:border-0">
+                <div>
+                    <p className="font-medium text-slate-800">Weekly Settlement</p>
+                    <p className="text-xs text-slate-400">14 Dec 2025</p>
+                </div>
+                <span className="text-green-600 font-bold">+ ₹2,400</span>
+                </div>
+            ))}
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      
+      {/* Toast */}
+      {showToast && (
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl z-[70] flex items-center animate-bounce">
+          <CheckCircle className="w-5 h-5 mr-2 text-green-400" />
+          {showToast}
+        </div>
+      )}
+
+      {/* Responsive Navbar - FIXED OVERLAP ISSUE using z-50 and bg-white */}
+      <nav className="bg-white sticky top-0 z-50 border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+                <div className="flex items-center">
+                    <span className="text-2xl font-bold text-orange-600 tracking-tight">Ghar Ka Khana</span>
+                    <span className="ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full hidden sm:inline-block">Partner App</span>
+                </div>
+                
+                {/* Desktop Menu */}
+                <div className="hidden md:flex space-x-8 items-center">
+                    {['orders', 'menu', 'earnings'].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors capitalize ${
+                                activeTab === tab 
+                                ? 'text-orange-600 bg-orange-50' 
+                                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                            }`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                    {/* Logout Button Added for Desktop */}
+                    <button 
+                      onClick={handleLogout}
+                      className="ml-4 flex items-center text-slate-500 hover:text-red-600 font-medium text-sm transition-colors"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </button>
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold border border-orange-200">
+                        P
+                    </div>
+                </div>
+
+                {/* Mobile Header Logout Icon */}
+                <div className="flex md:hidden items-center">
+                   <button onClick={handleLogout} className="p-2 text-slate-500 hover:text-red-600">
+                      <LogOut className="w-6 h-6" />
+                   </button>
+                </div>
+            </div>
+        </div>
+      </nav>
+
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === 'orders' && <OrdersView />}
+        {activeTab === 'menu' && <MenuView />}
+        {activeTab === 'earnings' && <EarningsView />}
+      </main>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 md:hidden z-40 pb-safe">
+        <div className="grid grid-cols-3 h-16">
+            <button 
+            onClick={() => setActiveTab('orders')}
+            className={`flex flex-col items-center justify-center space-y-1 ${activeTab === 'orders' ? 'text-orange-600' : 'text-slate-400'}`}
+            >
+            <ChefHat className="w-6 h-6" />
+            <span className="text-xs font-medium">Orders</span>
+            </button>
+            
+            <button 
+            onClick={() => setActiveTab('menu')}
+            className={`flex flex-col items-center justify-center space-y-1 ${activeTab === 'menu' ? 'text-orange-600' : 'text-slate-400'}`}
+            >
+            <Utensils className="w-6 h-6" />
+            <span className="text-xs font-medium">Menu</span>
+            </button>
+            
+            <button 
+            onClick={() => setActiveTab('earnings')}
+            className={`flex flex-col items-center justify-center space-y-1 ${activeTab === 'earnings' ? 'text-orange-600' : 'text-slate-400'}`}
+            >
+            <IndianRupee className="w-6 h-6" />
+            <span className="text-xs font-medium">Money</span>
+            </button>
+        </div>
+      </div>
+    </div>
+  );
+}
