@@ -11,9 +11,14 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const { items } = useCart();
 
+<<<<<<< HEAD
   // Determine consumer login from consumerToken only (do not rely on partnerToken)
   const consumerToken = typeof window !== 'undefined' ? localStorage.getItem('consumerToken') : null;
   const userRole = consumerToken ? (user?.role || 'customer') : 'guest';
+=======
+  // Default to guest if user role is undefined or null
+  const userRole = user?.role || 'guest';
+>>>>>>> origin/main
 
   // Determine navbar items based on user role
   const getNavItems = () => {

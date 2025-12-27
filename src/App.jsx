@@ -1,5 +1,9 @@
 import React from 'react';
+<<<<<<< HEAD
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+=======
+import { Routes, Route, useLocation } from 'react-router-dom';
+>>>>>>> origin/main
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -19,6 +23,7 @@ import Contact from './pages/Contact';
 import FAQs from './pages/FAQs';
 import NotFound from './pages/NotFound';
 
+<<<<<<< HEAD
 const RequirePartner = ({ children }) => {
   if (typeof window !== 'undefined' && !localStorage.getItem('partnerToken')) {
     return <Navigate to="/partner-login" replace />;
@@ -26,11 +31,17 @@ const RequirePartner = ({ children }) => {
   return children;
 };
 
+=======
+>>>>>>> origin/main
 const App = () => {
   const location = useLocation();
 
   // Partner / chef dashboard should not show the customer-facing Navbar/Footer
+<<<<<<< HEAD
   const isPartnerRoute = ['/chef-dashboard', '/homemaker-dashboard', '/partner-login'].includes(
+=======
+  const isPartnerRoute = ['/chef-dashboard', '/homemaker-dashboard'].includes(
+>>>>>>> origin/main
     location.pathname
   );
 
@@ -50,9 +61,14 @@ const App = () => {
             <Route path="/chef-onboard" element={<ChefOnboard />} />
             <Route path="/pending-verification" element={<PendingVerification />} />
             <Route path="/order-success" element={<OrderSuccess />} />
+<<<<<<< HEAD
             <Route path="/chef-dashboard" element={<RequirePartner><HomemakerDashboard /></RequirePartner>} />
             <Route path="/homemaker-dashboard" element={<RequirePartner><HomemakerDashboard /></RequirePartner>} />
             <Route path="/partner-login" element={<Navigate to="/login?role=chef" replace />} />
+=======
+            <Route path="/chef-dashboard" element={<HomemakerDashboard />} />
+            <Route path="/homemaker-dashboard" element={<HomemakerDashboard />} />
+>>>>>>> origin/main
             <Route path="/customer-dashboard" element={<CustomerDashboard />} />
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/contact" element={<Contact />} />

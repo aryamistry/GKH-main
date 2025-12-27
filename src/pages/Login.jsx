@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+=======
+import { Link, useNavigate } from 'react-router-dom';
+>>>>>>> origin/main
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+<<<<<<< HEAD
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const defaultRole = params.get('role') || 'customer';
   const [form, setForm] = useState({ email: '', password: '', role: defaultRole });
+=======
+  const [form, setForm] = useState({ email: '', password: '', role: 'customer' });
+>>>>>>> origin/main
   const [error, setError] = useState('');
 
   const handleSubmit = e => {
@@ -18,6 +26,7 @@ const Login = () => {
       setError('Please fill in all fields');
       return;
     }
+<<<<<<< HEAD
     const userName = form.email.split('@')[0];
     login({ name: userName, role: form.role });
     // Persist separate tokens and partnerName per role
@@ -27,6 +36,15 @@ const Login = () => {
       navigate('/chef-dashboard');
     } else {
       localStorage.setItem('consumerToken', Date.now().toString());
+=======
+    login({ name: form.email.split('@')[0], role: form.role });
+    // After login, redirect based on role
+    if (form.role === 'chef') {
+      // Chefs redirect to dashboard (which has verification check)
+      // If not verified, they'll be redirected to pending-verification
+      navigate('/chef-dashboard');
+    } else {
+>>>>>>> origin/main
       navigate('/explore');
     }
   };

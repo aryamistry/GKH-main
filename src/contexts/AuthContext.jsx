@@ -56,10 +56,14 @@ export const AuthProvider = ({ children }) => {
     }));
   };
 
+<<<<<<< HEAD
   const logout = () => {
     localStorage.removeItem('consumerToken');
     setUser(defaultUser);
   };
+=======
+  const logout = () => setUser(defaultUser);
+>>>>>>> origin/main
 
   const value = useMemo(() => ({ user, login, logout, register, applyAsChef, verifyChef }), [user]);
 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import food_1Image from './assets/food_1.png';
 import food_2Image from './assets/food_2.png';
 import food_3Image from './assets/food_3.png';
@@ -5,6 +6,8 @@ import food_4Image from './assets/food_4.png';
 import food_5Image from './assets/food_5.png';
 import food_6Image from './assets/food_6.png';
 
+=======
+>>>>>>> origin/main
 export const chefs = [
   {
     id: 'chef-1',
@@ -53,7 +56,12 @@ export const dishes = [
     mealTypes: ['Lunch', 'Dinner'],
     preOrderAvailable: true,
     chefId: 'chef-1',
+<<<<<<< HEAD
     image: food_1Image,
+=======
+    image:
+      'https://images.unsplash.com/photo-1559050019-6b509a68e480?auto=format&fit=crop&w=800&q=80',
+>>>>>>> origin/main
     description: 'Char-grilled paneer in a silky tomato-cashew gravy.',
     ingredients: ['Paneer', 'Tomato', 'Cashew', 'Spices'],
     calories: 480
@@ -66,7 +74,12 @@ export const dishes = [
     mealTypes: ['Lunch', 'Dinner'],
     preOrderAvailable: true,
     chefId: 'chef-2',
+<<<<<<< HEAD
     image: food_2Image,
+=======
+    image:
+      'https://images.unsplash.com/photo-1604908177010-ca17a4be0f1b?auto=format&fit=crop&w=800&q=80',
+>>>>>>> origin/main
     description: 'Winter-special slow cooked mixed vegetables and methi muthia.',
     ingredients: ['Veggies', 'Methi Muthia', 'Spices'],
     calories: 410
@@ -79,7 +92,12 @@ export const dishes = [
     mealTypes: ['Dinner'],
     preOrderAvailable: true,
     chefId: 'chef-4',
+<<<<<<< HEAD
     image: food_3Image,
+=======
+    image:
+      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
+>>>>>>> origin/main
     description: 'Coconut-based curry with fresh prawns and curry leaves.',
     ingredients: ['Prawns', 'Coconut', 'Curry Leaves', 'Spices'],
     calories: 520
@@ -92,7 +110,12 @@ export const dishes = [
     mealTypes: ['Lunch', 'Dinner'],
     preOrderAvailable: true,
     chefId: 'chef-1',
+<<<<<<< HEAD
     image: food_4Image,
+=======
+    image:
+      'https://images.unsplash.com/photo-1604908177225-0ac1c9f9f369?auto=format&fit=crop&w=800&q=80',
+>>>>>>> origin/main
     description: 'Smoky tandoori chicken with mint chutney and salad.',
     ingredients: ['Chicken', 'Yogurt', 'Spices', 'Mint'],
     calories: 560
@@ -105,7 +128,12 @@ export const dishes = [
     mealTypes: ['Lunch'],
     preOrderAvailable: true,
     chefId: 'chef-3',
+<<<<<<< HEAD
     image: food_5Image,
+=======
+    image:
+      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
+>>>>>>> origin/main
     description: 'Colorful bowl with quinoa, roasted veggies, hummus, and greens.',
     ingredients: ['Quinoa', 'Chickpeas', 'Veggies', 'Tahini'],
     calories: 420
@@ -118,7 +146,12 @@ export const dishes = [
     mealTypes: ['Dinner'],
     preOrderAvailable: true,
     chefId: 'chef-4',
+<<<<<<< HEAD
     image: food_6Image,
+=======
+    image:
+      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80',
+>>>>>>> origin/main
     description: 'Tangy tamarind and coconut based fish curry from Kerala.',
     ingredients: ['Fish', 'Coconut', 'Tamarind', 'Spices'],
     calories: 530
@@ -142,4 +175,10 @@ export const mockOrders = [
     amount: 280,
     time: 'Today, 8:00 PM'
   }
+<<<<<<< HEAD
 ];
+=======
+];
+
+
+>>>>>>> origin/main

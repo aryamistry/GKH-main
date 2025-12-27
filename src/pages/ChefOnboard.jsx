@@ -17,7 +17,11 @@ const ChefOnboard = () => {
   });
   const [errors, setErrors] = useState({});
 
+<<<<<<< HEAD
   const monthlyEarnings = (ordersPerDay * 100 * 25 * 0.85).toFixed(0); // avg price * days * 85% (15% commission)
+=======
+  const monthlyEarnings = (ordersPerDay * 320 * 25 * 0.85).toFixed(0); // avg price * days * 85% (15% commission)
+>>>>>>> origin/main
 
   const handleInputChange = e => {
     const { name, value } = e.target;
@@ -133,10 +137,17 @@ const ChefOnboard = () => {
 
             <div className="bg-white rounded-2xl p-4 space-y-2">
               <p className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+<<<<<<< HEAD
                 <TrendingUp className="text-accent" size={18} /> Based on ₹100 avg price per meal
               </p>
               <p className="text-xs text-slate-500">
                 {ordersPerDay} orders/day × 25 working days × ₹100 × 85% after 15% commission
+=======
+                <TrendingUp className="text-accent" size={18} /> Based on ₹320 avg price per meal
+              </p>
+              <p className="text-xs text-slate-500">
+                {ordersPerDay} orders/day × 25 working days × ₹320 × 85% after 15% commission
+>>>>>>> origin/main
               </p>
             </div>
           </motion.div>

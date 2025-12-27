@@ -36,9 +36,12 @@ export default function HomemakerDashboard() {
   const [showToast, setShowToast] = useState(null);
   const navigate = useNavigate();
 
+<<<<<<< HEAD
   const partnerName = typeof window !== 'undefined' ? localStorage.getItem('partnerName') || 'Partner' : 'Partner';
   const partnerInitial = partnerName.charAt(0).toUpperCase();
 
+=======
+>>>>>>> origin/main
   // --- Add Item Modal State ---
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newItem, setNewItem] = useState({
@@ -57,11 +60,19 @@ export default function HomemakerDashboard() {
   };
 
   const handleLogout = () => {
+<<<<<<< HEAD
     localStorage.removeItem("partnerToken");
     navigate("/partner-login", { replace: true });
   };
 
 
+=======
+    // Logic to clear session/token would go here
+    alert("Logging out...");
+    navigate('/');
+  };
+
+>>>>>>> origin/main
   const handleOrderAction = (orderId, action) => {
     setOrders(prev => prev.map(order => {
       if (order.id !== orderId) return order;
@@ -577,8 +588,13 @@ export default function HomemakerDashboard() {
                       <LogOut className="w-4 h-4 mr-2" />
                       Logout
                     </button>
+<<<<<<< HEAD
                     <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold border border-orange-200" title={partnerName}>
                       {partnerInitial}
+=======
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold border border-orange-200">
+                        P
+>>>>>>> origin/main
                     </div>
                 </div>
                 

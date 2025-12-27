@@ -32,7 +32,11 @@ const Contact = () => {
               <div>
                 <p className="font-semibold text-slate-900">Email</p>
                 <a href="mailto:hello@gharkakhana.com" className="text-slate-600 hover:text-primary">
+<<<<<<< HEAD
                   help@gharkakhana.com
+=======
+                  hello@gharkakhana.com
+>>>>>>> origin/main
                 </a>
               </div>
             </div>
@@ -51,7 +55,11 @@ const Contact = () => {
                 <p className="font-semibold text-slate-900">Address</p>
                 <p className="text-slate-600">
                   Ghar Ka Khana<br />
+<<<<<<< HEAD
                   Ahmedabad, Gujarat,<br />
+=======
+                  Mumbai, Maharashtra<br />
+>>>>>>> origin/main
                   India
                 </p>
               </div>
