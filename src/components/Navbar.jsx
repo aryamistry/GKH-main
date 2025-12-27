@@ -11,14 +11,10 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const { items } = useCart();
 
-<<<<<<< HEAD
-  // Determine consumer login from consumerToken only (do not rely on partnerToken)
-  const consumerToken = typeof window !== 'undefined' ? localStorage.getItem('consumerToken') : null;
-  const userRole = consumerToken ? (user?.role || 'customer') : 'guest';
-=======
-  // Default to guest if user role is undefined or null
-  const userRole = user?.role || 'guest';
->>>>>>> origin/main
+  // Consumer navbar should depend only on consumerToken in localStorage
+  const consumerToken = localStorage.getItem('consumerToken');
+  const isConsumer = !!consumerToken;
+  const userRole = isConsumer ? 'customer' : 'guest';
 
   // Determine navbar items based on user role
   const getNavItems = () => {
@@ -108,7 +104,7 @@ const Navbar = () => {
                 className="flex items-center gap-2 px-3 py-2 rounded-full bg-accent text-white text-sm font-semibold"
               >
                 <User size={18} />
-                <span>{user.name}</span>
+                <span>{(isConsumer && (localStorage.getItem('consumerUser') || user.name)) || user.name}</span>
               </Link>
               <button
                 className="p-2 rounded-full hover:bg-orange-50 text-slate-700"

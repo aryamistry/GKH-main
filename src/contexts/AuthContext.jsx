@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
@@ -14,27 +14,59 @@ const defaultUser = {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(defaultUser);
 
+  // Initialize user from localStorage tokens (consumerToken / partnerToken)
+  useEffect(() => {
+    const partnerToken = localStorage.getItem('partnerToken');
+    const consumerToken = localStorage.getItem('consumerToken');
+
+    if (partnerToken) {
+      const name = localStorage.getItem('partnerUser') || 'Homemaker';
+      setUser({ ...defaultUser, name, role: 'chef', isVerified: true, verificationStatus: 'verified' });
+    } else if (consumerToken) {
+      const name = localStorage.getItem('consumerUser') || 'Foodie';
+      setUser({ ...defaultUser, name, role: 'customer', isVerified: true, verificationStatus: 'verified' });
+    } else {
+      setUser(defaultUser);
+    }
+  }, []);
+
   const login = ({ name, role }) => {
     if (!role || !roles.includes(role)) {
       console.error('Invalid role provided to login:', role);
       role = 'customer';
     }
-    setUser({ 
-      name: name || 'Foodie', 
-      role: role,
-      isVerified: role === 'chef' ? false : true,
-      verificationStatus: role === 'chef' ? 'none' : 'none'
-    });
+    const finalName = name || (role === 'chef' ? 'Homemaker' : 'Foodie');
+    if (role === 'chef') {
+      const token = `partner-token-${Date.now()}`;
+      localStorage.setItem('partnerToken', token);
+      localStorage.setItem('partnerUser', finalName);
+      // store partnerName for UI display
+      localStorage.setItem('partnerName', finalName);
+      setUser({ name: finalName, role: 'chef', isVerified: false, verificationStatus: 'none' });
+    } else {
+      const token = `consumer-token-${Date.now()}`;
+      localStorage.setItem('consumerToken', token);
+      localStorage.setItem('consumerUser', finalName);
+      setUser({ name: finalName, role: 'customer', isVerified: true, verificationStatus: 'none' });
+    }
   };
 
   const register = ({ name, role }) => {
     const finalRole = roles.includes(role) ? role : 'customer';
-    setUser({ 
-      name: name || 'New Chef', 
-      role: finalRole,
-      isVerified: false,
-      verificationStatus: finalRole === 'chef' ? 'pending_verification' : 'verified'
-    });
+    const finalName = name || (finalRole === 'chef' ? 'New Chef' : 'Foodie');
+    if (finalRole === 'chef') {
+      const token = `partner-token-${Date.now()}`;
+      localStorage.setItem('partnerToken', token);
+      localStorage.setItem('partnerUser', finalName);
+      // store partnerName for UI display
+      localStorage.setItem('partnerName', finalName);
+      setUser({ name: finalName, role: 'chef', isVerified: false, verificationStatus: 'pending_verification' });
+    } else {
+      const token = `consumer-token-${Date.now()}`;
+      localStorage.setItem('consumerToken', token);
+      localStorage.setItem('consumerUser', finalName);
+      setUser({ name: finalName, role: 'customer', isVerified: true, verificationStatus: 'verified' });
+    }
   };
 
   const applyAsChef = ({ name, specialty, kitchenLocation, contactDetails }) => {
@@ -56,14 +88,12 @@ export const AuthProvider = ({ children }) => {
     }));
   };
 
-<<<<<<< HEAD
+  // Logout for consumer (called from consumer Navbar)
   const logout = () => {
     localStorage.removeItem('consumerToken');
+    localStorage.removeItem('consumerUser');
     setUser(defaultUser);
   };
-=======
-  const logout = () => setUser(defaultUser);
->>>>>>> origin/main
 
   const value = useMemo(() => ({ user, login, logout, register, applyAsChef, verifyChef }), [user]);
 
