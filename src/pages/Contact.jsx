@@ -20,26 +20,29 @@ const Contact = () => {
     <div className="max-w-6xl mx-auto px-4 py-10">
       <div className="mb-12">
         <h1 className="text-4xl font-bold text-slate-900 mb-4">Contact Us</h1>
-        <p className="text-lg text-slate-600">We'd love to hear from you. Get in touch with our team.</p>
+        <p className="text-lg text-slate-600">
+          We'd love to hear from you. Get in touch with our team.
+        </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-10 mb-12">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 mb-6">Get in Touch</h2>
+
           <div className="space-y-6">
             <div className="flex gap-4 items-start">
               <Mail className="text-primary mt-1" size={24} />
               <div>
                 <p className="font-semibold text-slate-900">Email</p>
-                <a href="mailto:hello@gharkakhana.com" className="text-slate-600 hover:text-primary">
-<<<<<<< HEAD
+                <a
+                  href="mailto:help@gharkakhana.com"
+                  className="text-slate-600 hover:text-primary"
+                >
                   help@gharkakhana.com
-=======
-                  hello@gharkakhana.com
->>>>>>> origin/main
                 </a>
               </div>
             </div>
+
             <div className="flex gap-4 items-start">
               <Phone className="text-primary mt-1" size={24} />
               <div>
@@ -49,17 +52,14 @@ const Contact = () => {
                 </a>
               </div>
             </div>
+
             <div className="flex gap-4 items-start">
               <MapPin className="text-primary mt-1" size={24} />
               <div>
                 <p className="font-semibold text-slate-900">Address</p>
                 <p className="text-slate-600">
                   Ghar Ka Khana<br />
-<<<<<<< HEAD
                   Ahmedabad, Gujarat,<br />
-=======
-                  Mumbai, Maharashtra<br />
->>>>>>> origin/main
                   India
                 </p>
               </div>
@@ -67,7 +67,10 @@ const Contact = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-card p-6 space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-2xl shadow-card p-6 space-y-4"
+        >
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Name</label>
             <input
@@ -80,6 +83,7 @@ const Contact = () => {
               placeholder="Your name"
             />
           </div>
+
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
             <input
@@ -92,6 +96,7 @@ const Contact = () => {
               placeholder="Your email"
             />
           </div>
+
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Subject</label>
             <input
@@ -104,6 +109,7 @@ const Contact = () => {
               placeholder="Subject"
             />
           </div>
+
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Message</label>
             <textarea
@@ -116,14 +122,18 @@ const Contact = () => {
               placeholder="Your message"
             />
           </div>
+
           <button
             type="submit"
             className="w-full py-3 rounded-full bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition"
           >
             <Send size={18} /> Send Message
           </button>
+
           {submitted && (
-            <p className="text-green-600 font-semibold text-center">Message sent successfully!</p>
+            <p className="text-green-600 font-semibold text-center">
+              Message sent successfully!
+            </p>
           )}
         </form>
       </div>
